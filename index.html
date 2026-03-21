@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulasi Stoikiometri</title>
+    <style>
+        /* Mengatur penengah tampilan agar rapi di web */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #2c3e50; /* Warna latar belakang opsional */
+        }
+
+        /* Container utama simulasi dengan ukuran presisi 512x288 px */
+        #simulasi-container {
+            position: relative;
+            width: 512px;
+            height: 288px;
+            background-image: url('kanvaspmm.png');
+            background-size: cover;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        /* Layer untuk menampilkan GIF */
+        #layer-animasi {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 512px;
+            height: 288px;
+            pointer-events: none; /* Agar klik diteruskan ke tombol di bawahnya */
+            display: none; /* Disembunyikan sebelum ada senyawa yang dipilih */
+        }
+
+        /* Tombol transparan / Hitbox */
+        .hitbox {
+            position: absolute;
+            cursor: pointer;
+            /* Hapus tanda komentar pada baris di bawah ini jika ingin melihat kotak bantuan area klik (untuk debugging) */
+            /* border: 1px solid rgba(255, 0, 0, 0.5); background-color: rgba(255, 0, 0, 0.2); */
+        }
+
+        /* Mengatur posisi tombol berdasarkan grid 32x32px */
+        #btn-ch4 { left: 32px; top: 64px; width: 32px; height: 32px; } /* Koordinat b3 */
+        #btn-nh3 { left: 32px; top: 96px; width: 32px; height: 32px; } /* Koordinat b4 */
+        #btn-h2o { left: 32px; top: 128px; width: 32px; height: 32px; } /* Koordinat b5 */
+        #btn-hf  { left: 32px; top: 160px; width: 32px; height: 32px; } /* Koordinat b6 */
+        #btn-co2 { left: 32px; top: 192px; width: 32px; height: 32px; } /* Koordinat b7 */
+
+        #btn-gabung { left: 128px; top: 224px; width: 64px; height: 32px; } /* Koordinat e8-f8 */
+        #btn-pisah  { left: 320px; top: 224px; width: 64px; height: 32px; } /* Koordinat k8-l8 */
+    </style>
+</head>
+<body>
+
+    <div id="simulasi-container">
+        <img id="layer-animasi" src="" alt="Animasi Stoikiometri">
+
+        <div id="btn-ch4" class="hitbox" onclick="pilihSenyawa('ch')" title="Pilih CH4"></div>
+        <div id="btn-nh3" class="hitbox" onclick="pilihSenyawa('nh')" title="Pilih NH3"></div>
+        <div id="btn-h2o" class="hitbox" onclick="pilihSenyawa('oh')" title="Pilih H2O"></div>
+        <div id="btn-hf" class="hitbox" class="hitbox" onclick="pilihSenyawa('fh')" title="Pilih HF"></div>
+        <div id="btn-co2" class="hitbox" onclick="pilihSenyawa('co')" title="Pilih CO2"></div>
+
+        <div id="btn-gabung" class="hitbox" onclick="reaksiGabung()" title="Gabungkan"></div>
+        <div id="btn-pisah" class="hitbox" onclick="reaksiPisah()" title="Pisahkan"></div>
+    </div>
+
+    <script>
+        let senyawaAktif = ''; // Menyimpan status senyawa yang sedang dipilih
+        let timerAnimasi; // Menyimpan status durasi animasi transisi
+        const layerAnimasi = document.getElementById('layer-animasi');
+
+        // Fungsi bantuan: Menggunakan timestamp agar browser tidak melakukan cache pada GIF, 
+        // sehingga animasi GIF akan selalu diputar dari awal setiap kali dipanggil.
+        function tampilkanGif(namaFile) {
+            layerAnimasi.src = namaFile + "?t=" + new Date().getTime();
+        }
+
+        // Fungsi ketika senyawa di sisi kiri ditekan
+        function pilihSenyawa(kodeSenyawa) {
+            senyawaAktif = kodeSenyawa;
+            clearTimeout(timerAnimasi); // Hentikan animasi sebelumnya jika ada
+            layerAnimasi.style.display = 'block'; // Tampilkan layar kanvas GIF
+            
+            // Default ketika dipilih adalah mode terpisah (dis)
+            tampilkanGif(`pmm${kodeSenyawa}dis.gif`);
+        }
+
+        // Fungsi ketika tombol "Gabung" ditekan
+        function reaksiGabung() {
+            // Jika belum ada senyawa yang dipilih, abaikan klik
+            if (senyawaAktif === '') return; 
+
+            clearTimeout(timerAnimasi);
+            
+            // Putar animasi transisi penggabungan
+            tampilkanGif(`pmm${senyawaAktif}com1.gif`);
+
+            // PENTING: Ubah angka 2000 (milidetik) di bawah ini sesuai dengan 
+            // panjang/durasi sebenarnya dari animasi gif transisi penggabungan Anda.
+            // Setelah waktu habis, gambar akan menetap di mode gabung (com)
+            timerAnimasi = setTimeout(() => {
+                tampilkanGif(`pmm${senyawaAktif}com.gif`);
+            }, 2000); // 2000 ms = 2 detik. 
+        }
+
+        // Fungsi ketika tombol "Pisah" ditekan
+        function reaksiPisah() {
+            if (senyawaAktif === '') return; 
+
+            clearTimeout(timerAnimasi);
+            
+            // Putar animasi transisi pemisahan
+            tampilkanGif(`pmm${senyawaAktif}dis1.gif`);
+
+            // Sama seperti di atas, sesuaikan 2000ms dengan durasi file ...dis1.gif Anda.
+            timerAnimasi = setTimeout(() => {
+                tampilkanGif(`pmm${senyawaAktif}dis.gif`);
+            }, 2000);
+        }
+    </script>
+
+</body>
+</html>
