@@ -12,9 +12,8 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            /* Jika diuji di browser lokal, ini mungkin terlihat putih. 
-               Namun saat di-embed di G-Sites yang memiliki background, ini akan transparan (tembus pandang). */
-            background-color: transparent; 
+            /* Warna latar belakang disesuaikan dengan gambar referensi Anda */
+            background-color: #1a1a1a; 
         }
 
         /* Container Kanvas */
@@ -70,11 +69,26 @@
     </div>
 
     <script>
+        // --- PRELOADER ASET ---
+        // Memuat semua GIF ke memori browser saat halaman web pertama kali dibuka
+        // Ini memastikan tidak ada jeda "loading" saat tombol ditekan pertama kali
+        window.onload = function() {
+            const listSenyawa = ['ch', 'nh', 'oh', 'fh', 'co'];
+            const listTipe = ['dis.gif', 'dis1.gif', 'com.gif', 'com1.gif'];
+            
+            listSenyawa.forEach(senyawa => {
+                listTipe.forEach(tipe => {
+                    const img = new Image();
+                    img.src = `pmm${senyawa}${tipe}`;
+                });
+            });
+        };
+
+        // --- LOGIKA SIMULASI ---
         let senyawaAktif = ''; 
         let timerAnimasi; 
         const layerAnimasi = document.getElementById('layer-animasi');
 
-        // Durasi frame murni yang Anda hitung sebelumnya
         const durasiAnimasi = {
             'co': 3300, 
             'fh': 1800, 
@@ -84,7 +98,6 @@
         };
 
         function tampilkanGif(namaFile) {
-            // ?t=... digunakan agar GIF selalu diputar ulang dari frame 1
             layerAnimasi.src = namaFile + "?t=" + new Date().getTime();
         }
 
@@ -93,7 +106,6 @@
             clearTimeout(timerAnimasi); 
             layerAnimasi.style.display = 'block'; 
             
-            // Untuk state dasar statis, kita tidak memaksakan reload waktu (?t=) agar lebih mulus
             layerAnimasi.src = `pmm${kodeSenyawa}dis.gif`;
         }
 
@@ -101,16 +113,12 @@
             if (senyawaAktif === '') return; 
 
             clearTimeout(timerAnimasi);
-            
-            // Tampilkan animasi transisi
             tampilkanGif(`pmm${senyawaAktif}${jenis}1.gif`);
 
-            // TRIK: Potong durasi 150 milidetik lebih awal dari total aslinya
-            // agar transisi langsung diganti gambar statis sebelum GIF sempat meloop/mengulang frame 1
+            // Memotong jeda 150ms agar lebih akurat sebelum pergantian
             let waktuPotong = durasiAnimasi[senyawaAktif] - 150; 
 
             timerAnimasi = setTimeout(() => {
-                // Tampilkan versi gambar menetap tanpa cache-reload
                 layerAnimasi.src = `pmm${senyawaAktif}${jenis}.gif`;
             }, waktuPotong);
         }
