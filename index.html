@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulasi Stoikiometri</title>
     <style>
-        /* Mengatur penengah tampilan agar rapi saat disematkan (misal di Google Sites) */
+        /* Mengatur penengah tampilan agar rapi saat disematkan */
         body {
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: transparent; /* Transparan agar menyatu dengan background web */
+            background-color: #000000; /* Warna latar belakang dikembalikan ke hitam */
         }
 
         /* Container utama simulasi dengan ukuran presisi 512x288 px */
@@ -22,7 +22,6 @@
             height: 288px;
             background-image: url('kanvaspmm.png');
             background-size: cover;
-            /* box-shadow: 0 4px 8px rgba(0,0,0,0.3); Hilangkan komentar jika ingin ada bayangan */
         }
 
         /* Layer untuk menampilkan GIF */
@@ -40,8 +39,6 @@
         .hitbox {
             position: absolute;
             cursor: pointer;
-            /* Hapus tanda komentar pada baris di bawah ini jika ingin melihat kotak bantuan area klik (untuk debugging) */
-            /* border: 1px solid rgba(255, 0, 0, 0.5); background-color: rgba(255, 0, 0, 0.2); */
         }
 
         /* Mengatur posisi tombol berdasarkan grid 32x32px */
@@ -76,56 +73,45 @@
         const layerAnimasi = document.getElementById('layer-animasi');
 
         // Kamus durasi animasi transisi dalam milidetik (ms)
-        // Dihitung dari jumlah frame dikali 300ms
+        // Telah dikurangi 200ms (0,2 detik) dari total asli agar transisi lebih mulus
         const durasiAnimasi = {
-            'co': 3300, // 11 frame
-            'fh': 1800, // 6 frame
-            'ch': 3300, // 11 frame
-            'nh': 2400, // 8 frame
-            'oh': 2400  // 8 frame
+            'co': 3100, // Aslinya 3300
+            'fh': 1600, // Aslinya 1800
+            'ch': 3100, // Aslinya 3300
+            'nh': 2200, // Aslinya 2400
+            'oh': 2200  // Aslinya 2400
         };
 
-        // Fungsi agar GIF selalu mengulang dari frame pertama
         function tampilkanGif(namaFile) {
             layerAnimasi.src = namaFile + "?t=" + new Date().getTime();
         }
 
-        // Fungsi saat memilih senyawa dari menu kiri
         function pilihSenyawa(kodeSenyawa) {
             senyawaAktif = kodeSenyawa;
             clearTimeout(timerAnimasi); 
             layerAnimasi.style.display = 'block'; 
             
-            // Keadaan dasar selalu menampilkan versi terpisah (dis)
             tampilkanGif(`pmm${kodeSenyawa}dis.gif`);
         }
 
-        // Fungsi saat tombol Gabung ditekan
         function reaksiGabung() {
             if (senyawaAktif === '') return; 
 
             clearTimeout(timerAnimasi);
-            
-            // 1. Tampilkan animasi proses penggabungan
             tampilkanGif(`pmm${senyawaAktif}com1.gif`);
 
-            // 2. Tunggu sesuai durasi spesifik senyawa tersebut, lalu tampilkan hasil akhirnya
             let waktuTunggu = durasiAnimasi[senyawaAktif];
             timerAnimasi = setTimeout(() => {
                 tampilkanGif(`pmm${senyawaAktif}com.gif`);
             }, waktuTunggu);
         }
 
-        // Fungsi saat tombol Pisah ditekan
         function reaksiPisah() {
             if (senyawaAktif === '') return; 
 
             clearTimeout(timerAnimasi);
-            
-            // 1. Tampilkan animasi proses pemisahan
             tampilkanGif(`pmm${senyawaAktif}dis1.gif`);
 
-            // 2. Tunggu sesuai durasi spesifik senyawa tersebut, lalu tampilkan hasil akhirnya
             let waktuTunggu = durasiAnimasi[senyawaAktif];
             timerAnimasi = setTimeout(() => {
                 tampilkanGif(`pmm${senyawaAktif}dis.gif`);
