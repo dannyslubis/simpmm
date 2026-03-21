@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulasi Stoikiometri</title>
     <style>
-        /* Mengatur penengah tampilan agar rapi di web */
+        /* Mengatur penengah tampilan agar rapi saat disematkan (misal di Google Sites) */
         body {
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: #2c3e50; /* Warna latar belakang opsional */
+            background-color: transparent; /* Transparan agar menyatu dengan background web */
         }
 
         /* Container utama simulasi dengan ukuran presisi 512x288 px */
@@ -22,7 +22,7 @@
             height: 288px;
             background-image: url('kanvaspmm.png');
             background-size: cover;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            /* box-shadow: 0 4px 8px rgba(0,0,0,0.3); Hilangkan komentar jika ingin ada bayangan */
         }
 
         /* Layer untuk menampilkan GIF */
@@ -63,7 +63,7 @@
         <div id="btn-ch4" class="hitbox" onclick="pilihSenyawa('ch')" title="Pilih CH4"></div>
         <div id="btn-nh3" class="hitbox" onclick="pilihSenyawa('nh')" title="Pilih NH3"></div>
         <div id="btn-h2o" class="hitbox" onclick="pilihSenyawa('oh')" title="Pilih H2O"></div>
-        <div id="btn-hf" class="hitbox" class="hitbox" onclick="pilihSenyawa('fh')" title="Pilih HF"></div>
+        <div id="btn-hf" class="hitbox" onclick="pilihSenyawa('fh')" title="Pilih HF"></div>
         <div id="btn-co2" class="hitbox" onclick="pilihSenyawa('co')" title="Pilih CO2"></div>
 
         <div id="btn-gabung" class="hitbox" onclick="reaksiGabung()" title="Gabungkan"></div>
@@ -71,57 +71,65 @@
     </div>
 
     <script>
-        let senyawaAktif = ''; // Menyimpan status senyawa yang sedang dipilih
-        let timerAnimasi; // Menyimpan status durasi animasi transisi
+        let senyawaAktif = ''; 
+        let timerAnimasi; 
         const layerAnimasi = document.getElementById('layer-animasi');
 
-        // Fungsi bantuan: Menggunakan timestamp agar browser tidak melakukan cache pada GIF, 
-        // sehingga animasi GIF akan selalu diputar dari awal setiap kali dipanggil.
+        // Kamus durasi animasi transisi dalam milidetik (ms)
+        // Dihitung dari jumlah frame dikali 300ms
+        const durasiAnimasi = {
+            'co': 3300, // 11 frame
+            'fh': 1800, // 6 frame
+            'ch': 3300, // 11 frame
+            'nh': 2400, // 8 frame
+            'oh': 2400  // 8 frame
+        };
+
+        // Fungsi agar GIF selalu mengulang dari frame pertama
         function tampilkanGif(namaFile) {
             layerAnimasi.src = namaFile + "?t=" + new Date().getTime();
         }
 
-        // Fungsi ketika senyawa di sisi kiri ditekan
+        // Fungsi saat memilih senyawa dari menu kiri
         function pilihSenyawa(kodeSenyawa) {
             senyawaAktif = kodeSenyawa;
-            clearTimeout(timerAnimasi); // Hentikan animasi sebelumnya jika ada
-            layerAnimasi.style.display = 'block'; // Tampilkan layar kanvas GIF
+            clearTimeout(timerAnimasi); 
+            layerAnimasi.style.display = 'block'; 
             
-            // Default ketika dipilih adalah mode terpisah (dis)
+            // Keadaan dasar selalu menampilkan versi terpisah (dis)
             tampilkanGif(`pmm${kodeSenyawa}dis.gif`);
         }
 
-        // Fungsi ketika tombol "Gabung" ditekan
+        // Fungsi saat tombol Gabung ditekan
         function reaksiGabung() {
-            // Jika belum ada senyawa yang dipilih, abaikan klik
             if (senyawaAktif === '') return; 
 
             clearTimeout(timerAnimasi);
             
-            // Putar animasi transisi penggabungan
+            // 1. Tampilkan animasi proses penggabungan
             tampilkanGif(`pmm${senyawaAktif}com1.gif`);
 
-            // PENTING: Ubah angka 2000 (milidetik) di bawah ini sesuai dengan 
-            // panjang/durasi sebenarnya dari animasi gif transisi penggabungan Anda.
-            // Setelah waktu habis, gambar akan menetap di mode gabung (com)
+            // 2. Tunggu sesuai durasi spesifik senyawa tersebut, lalu tampilkan hasil akhirnya
+            let waktuTunggu = durasiAnimasi[senyawaAktif];
             timerAnimasi = setTimeout(() => {
                 tampilkanGif(`pmm${senyawaAktif}com.gif`);
-            }, 2000); // 2000 ms = 2 detik. 
+            }, waktuTunggu);
         }
 
-        // Fungsi ketika tombol "Pisah" ditekan
+        // Fungsi saat tombol Pisah ditekan
         function reaksiPisah() {
             if (senyawaAktif === '') return; 
 
             clearTimeout(timerAnimasi);
             
-            // Putar animasi transisi pemisahan
+            // 1. Tampilkan animasi proses pemisahan
             tampilkanGif(`pmm${senyawaAktif}dis1.gif`);
 
-            // Sama seperti di atas, sesuaikan 2000ms dengan durasi file ...dis1.gif Anda.
+            // 2. Tunggu sesuai durasi spesifik senyawa tersebut, lalu tampilkan hasil akhirnya
+            let waktuTunggu = durasiAnimasi[senyawaAktif];
             timerAnimasi = setTimeout(() => {
                 tampilkanGif(`pmm${senyawaAktif}dis.gif`);
-            }, 2000);
+            }, waktuTunggu);
         }
     </script>
 
