@@ -5,17 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulasi Stoikiometri</title>
     <style>
-        /* Mengatur penengah tampilan agar rapi saat disematkan */
+        /* Latar belakang dibuat transparan agar menyatu dengan game utama SimLab */
         body {
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: #000000; /* Warna latar belakang dikembalikan ke hitam */
+            background-color: transparent; 
         }
 
-        /* Container utama simulasi dengan ukuran presisi 512x288 px */
         #simulasi-container {
             position: relative;
             width: 512px;
@@ -24,32 +23,34 @@
             background-size: cover;
         }
 
-        /* Layer untuk menampilkan GIF */
+        /* Layer animasi sekarang memiliki efek transisi fade-in dan fade-out */
         #layer-animasi {
             position: absolute;
             top: 0;
             left: 0;
             width: 512px;
             height: 288px;
-            pointer-events: none; /* Agar klik diteruskan ke tombol di bawahnya */
-            display: none; /* Disembunyikan sebelum ada senyawa yang dipilih */
+            pointer-events: none; 
+            display: none; 
+            opacity: 1;
+            /* Transisi fade berdurasi 0.15 detik */
+            transition: opacity 0.15s ease-in-out;
         }
 
-        /* Tombol transparan / Hitbox */
         .hitbox {
             position: absolute;
             cursor: pointer;
         }
 
-        /* Mengatur posisi tombol berdasarkan grid 32x32px */
-        #btn-ch4 { left: 32px; top: 64px; width: 32px; height: 32px; } /* Koordinat b3 */
-        #btn-nh3 { left: 32px; top: 96px; width: 32px; height: 32px; } /* Koordinat b4 */
-        #btn-h2o { left: 32px; top: 128px; width: 32px; height: 32px; } /* Koordinat b5 */
-        #btn-hf  { left: 32px; top: 160px; width: 32px; height: 32px; } /* Koordinat b6 */
-        #btn-co2 { left: 32px; top: 192px; width: 32px; height: 32px; } /* Koordinat b7 */
+        /* Posisi tombol */
+        #btn-ch4 { left: 32px; top: 64px; width: 32px; height: 32px; }
+        #btn-nh3 { left: 32px; top: 96px; width: 32px; height: 32px; }
+        #btn-h2o { left: 32px; top: 128px; width: 32px; height: 32px; }
+        #btn-hf  { left: 32px; top: 160px; width: 32px; height: 32px; }
+        #btn-co2 { left: 32px; top: 192px; width: 32px; height: 32px; }
 
-        #btn-gabung { left: 128px; top: 224px; width: 64px; height: 32px; } /* Koordinat e8-f8 */
-        #btn-pisah  { left: 320px; top: 224px; width: 64px; height: 32px; } /* Koordinat k8-l8 */
+        #btn-gabung { left: 128px; top: 224px; width: 64px; height: 32px; }
+        #btn-pisah  { left: 320px; top: 224px; width: 64px; height: 32px; }
     </style>
 </head>
 <body>
@@ -70,16 +71,16 @@
     <script>
         let senyawaAktif = ''; 
         let timerAnimasi; 
+        let timerFade;
         const layerAnimasi = document.getElementById('layer-animasi');
 
-        // Kamus durasi animasi transisi dalam milidetik (ms)
-        // Telah dikurangi 200ms (0,2 detik) dari total asli agar transisi lebih mulus
+        // Durasi dikembalikan ke hitungan murni (Jumlah Frame x 300ms)
         const durasiAnimasi = {
-            'co': 3100, // Aslinya 3300
-            'fh': 1600, // Aslinya 1800
-            'ch': 3100, // Aslinya 3300
-            'nh': 2200, // Aslinya 2400
-            'oh': 2200  // Aslinya 2400
+            'co': 3300, 
+            'fh': 1800, 
+            'ch': 3300, 
+            'nh': 2400, 
+            'oh': 2400  
         };
 
         function tampilkanGif(namaFile) {
@@ -89,33 +90,52 @@
         function pilihSenyawa(kodeSenyawa) {
             senyawaAktif = kodeSenyawa;
             clearTimeout(timerAnimasi); 
+            clearTimeout(timerFade);
+            
+            // Matikan fade sementara agar tidak berkedip aneh saat ganti senyawa baru
+            layerAnimasi.style.transition = 'none'; 
+            layerAnimasi.style.opacity = '1';
             layerAnimasi.style.display = 'block'; 
+            
+            // Nyalakan kembali transisi fade untuk digunakan nanti
+            setTimeout(() => {
+                layerAnimasi.style.transition = 'opacity 0.15s ease-in-out';
+            }, 50);
             
             tampilkanGif(`pmm${kodeSenyawa}dis.gif`);
         }
 
-        function reaksiGabung() {
+        // Fungsi gabungan untuk menyederhanakan kode
+        function eksekusiReaksi(jenis) { // jenis akan diisi 'com' atau 'dis'
             if (senyawaAktif === '') return; 
 
             clearTimeout(timerAnimasi);
-            tampilkanGif(`pmm${senyawaAktif}com1.gif`);
+            clearTimeout(timerFade);
+            
+            layerAnimasi.style.opacity = '1';
+            tampilkanGif(`pmm${senyawaAktif}${jenis}1.gif`); // Putar animasi transisi (...com1 atau ...dis1)
 
             let waktuTunggu = durasiAnimasi[senyawaAktif];
+            let durasiFade = 150; // Waktu untuk memulai fade out (150 milidetik sebelum selesai)
+
+            // 1. Memicu gambar memudar sesaat sebelum durasi asli habis
+            timerFade = setTimeout(() => {
+                layerAnimasi.style.opacity = '0';
+            }, waktuTunggu - durasiFade);
+
+            // 2. Mengganti gambar dan memudarkannya kembali masuk tepat di durasi asli
             timerAnimasi = setTimeout(() => {
-                tampilkanGif(`pmm${senyawaAktif}com.gif`);
+                tampilkanGif(`pmm${senyawaAktif}${jenis}.gif`);
+                layerAnimasi.style.opacity = '1';
             }, waktuTunggu);
         }
 
+        function reaksiGabung() {
+            eksekusiReaksi('com');
+        }
+
         function reaksiPisah() {
-            if (senyawaAktif === '') return; 
-
-            clearTimeout(timerAnimasi);
-            tampilkanGif(`pmm${senyawaAktif}dis1.gif`);
-
-            let waktuTunggu = durasiAnimasi[senyawaAktif];
-            timerAnimasi = setTimeout(() => {
-                tampilkanGif(`pmm${senyawaAktif}dis.gif`);
-            }, waktuTunggu);
+            eksekusiReaksi('dis');
         }
     </script>
 
